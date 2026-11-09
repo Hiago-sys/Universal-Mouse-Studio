@@ -1,0 +1,25 @@
+name: Validar diagnóstico Lunar
+on:
+  pull_request:
+    paths:
+      - 'scripts/Diagnosticar-Lunar.ps1'
+      - 'docs/LUNAR_I5_4570.md'
+      - '.github/workflows/lunar-diagnostics.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar sintaxe e cálculos sem medir hardware
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path scripts/Diagnosticar-Lunar.ps1), [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count) { throw ($errors | Out-String) }
+          ./scripts/Diagnosticar-Lunar.ps1 -SelfTest
+          if ($LASTEXITCODE -ne 0) { throw 'Autoteste falhou.' }
