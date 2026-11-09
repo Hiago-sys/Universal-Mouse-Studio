@@ -1,7 +1,15 @@
-# Universal Mouse Studio 0.1.0
+# Universal Mouse Studio 0.1.1
 
 Aplicação desktop C#/.NET 10 e WPF para Windows 10/11 x64. Esta entrega contém código-fonte, build Release e pacote portátil com o runtime incluído. **As integrações Windows foram compiladas em Linux, mas ainda não foram executadas em Windows nem validadas em mouse físico.** Não distribua o modo de correção experimental como produto validado antes do roteiro de ensaios.
 
+
+## Correção 0.1.1 — movimentos lentos no laboratório
+
+Corrigida uma falha reproduzida: pacotes inteiros pequenos em uma trajetória quase reta eram avaliados pelo ângulo individual, e nenhuma das 80 pequenas componentes de desvio recebia correção. O motor agora tolera desvios isolados de uma contagem quando a direção acumulada já está estabelecida, com liberação limitada em viradas deliberadas. A quantização mantém frações entre eventos alinhados, sem reproduzi-las após a parada.
+
+No laboratório: mantenha o hook desligado, selecione **Forte**, deixe **Aplicar algoritmo no laboratório** marcado e clique **Escolher mouse pelo movimento**. Mova o mouse a testar e desenhe uma linha aproximadamente horizontal. Confira o total de amostras e o número de corrigidas. O botão identifica o dispositivo que realmente está se movendo; não ativa o hook. Mudanças dos controles recalculam a trajetória já capturada. Se atingir o limite de 3000 amostras, uma nova captura limpa esse teste transitório.
+
+O indicador de hook ativo significa que o hook foi instalado; ele não comprova correção de movimento. Captura do laboratório e aplicação global são modos independentes. O ensaio em Windows/hardware continua necessário.
 
 ## Download para o Windows
 

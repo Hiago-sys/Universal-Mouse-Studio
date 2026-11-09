@@ -193,6 +193,60 @@ Test("Conversão de coordenadas recusa dimensões e pixels inválidos sem overfl
     Throws<ArgumentOutOfRangeException>(() => DesktopCoordinates.NormalizePixel(1920, 0, 1920));
     Throws<ArgumentOutOfRangeException>(() => DesktopCoordinates.NormalizePixel(int.MaxValue, int.MinValue, 1920));
 });
+Test("Trajetória lenta em degraus inteiros recebe correção no laboratório", () =>
+{
+    var p = Make(new MotionSettings { Enabled = true });
+    double rawY = 0, correctedY = 0;
+    int correctedEvents = 0;
+    for (int i = 0; i < 640; i++)
+    {
+        int dy = i % 8 == 7 ? 1 : 0;
+        var r = p.Process(1, dy, i * 2);
+        rawY += dy; correctedY += r.Y;
+        if(r.IsCorrected)correctedEvents++;
+    }
+    Console.WriteLine($"LABTRACE brutoY={rawY:F3} corrigidoY={correctedY:F3} eventosCorrigidos={correctedEvents}");
+    True(correctedEvents >= 70, $"Somente {correctedEvents} eventos corrigidos.");
+    True(correctedY < rawY * 0.5, $"Desvio bruto {rawY}; corrigido {correctedY}.");
+});
+
+Test("Pequeno movimento vertical em degraus inteiros também é corrigido", () =>
+{
+    var p = Make(new MotionSettings { Enabled = true }); double rawX=0, correctedX=0;
+    for(int i=0;i<640;i++){int dx=i%8==7?1:0;var r=p.Process(dx,1,i*2);rawX+=dx;correctedX+=r.X;}
+    True(correctedX<rawX*0.5);
+});
+Test("Ruído perpendicular isolado não desmonta a direção dominante", () =>
+{
+    var p=Make(new MotionSettings{Enabled=true,Strength=1});
+    for(int i=0;i<30;i++)p.Process(1,0,i);
+    var up=p.Process(0,1,31);Near(0,up.Y);True(up.IsCorrected);
+    var down=p.Process(0,-1,32);Near(0,down.Y);True(down.IsCorrected);
+    Near(1,p.Process(1,0,33).X);
+});
+Test("Virada intencional lenta não é bloqueada por ruído permitido", () =>
+{
+    var p=Make(new MotionSettings{Enabled=true,Strength=1});
+    for(int i=0;i<30;i++)p.Process(1,0,i);
+    double y=0;for(int i=0;i<20;i++)y+=p.Process(0,1,31+i).Y;
+    True(y>=18,$"A virada perdeu mais de duas contagens: {y}");
+});
+Test("Força intermediária conserva frações entre pacotes alinhados", () =>
+{
+    foreach(double strength in new[]{0d,0.25,0.65,1})
+    {
+        var p=Make(new MotionSettings{Enabled=true,Strength=strength});var q=new MotionQuantizer();int total=0;
+        for(int i=0;i<640;i++){int dy=i%8==7?1:0;var r=p.Process(1,dy,i*2);total+=q.QuantizeOrPassthrough(1,dy,r,p.HasDirectionLock).Y;}
+        Near(80*(1-strength),total,0.500000001);
+    }
+});
+
+Test("Pacotes de quatro contagens mantêm correção de um pequeno desvio isolado", () =>
+{
+    var p=Make(new MotionSettings{Enabled=true});double raw=0,corrected=0;
+    for(int i=0;i<160;i++){int dy=i%2;var r=p.Process(4,dy,i);raw+=dy;corrected+=r.Y;}
+    True(corrected<raw*0.5,$"Desvio bruto {raw}; corrigido {corrected}");
+});
 Test("Processamento determinístico e sem alocações no trecho quente", () =>
 {
     var a = Make(); var b = Make();

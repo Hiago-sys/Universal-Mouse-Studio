@@ -12,6 +12,8 @@ public sealed class MotionProcessor
     private double _evidenceX, _evidenceY, _distance, _lastTime = double.NaN;
     private double _lockedAngle = double.NaN, _previousX, _previousY;
     private bool _hasPrevious;
+    private double _microDeparture;
+    public bool HasDirectionLock => !double.IsNaN(_lockedAngle);
     private const double Degrees = 180 / Math.PI;
 
     public MotionProcessor() { }
@@ -31,6 +33,7 @@ public sealed class MotionProcessor
         _evidenceX = _evidenceY = _distance = _previousX = _previousY = 0;
         _lastTime = _lockedAngle = double.NaN;
         _hasPrevious = false;
+        _microDeparture = 0;
     }
 
     public MotionResult Process(double dx, double dy, double timestampMilliseconds)
@@ -59,11 +62,14 @@ public sealed class MotionProcessor
 
         double length = Math.Sqrt(dx * dx + dy * dy);
         double angle = Direction(dx, dy);
-        bool reversed = dx * _evidenceX + dy * _evidenceY < 0;
+        double evidenceLength = Math.Sqrt(_evidenceX * _evidenceX + _evidenceY * _evidenceY);
+        // Tiny perpendicular packets are not a reversal of the established trajectory.
+        bool reversed = dx * _evidenceX + dy * _evidenceY < -0.25 * length * evidenceLength;
         if (reversed)
         {
             _evidenceX = _evidenceY = _distance = 0;
             _lockedAngle = double.NaN;
+            _microDeparture = 0;
             _hasPrevious = false;
         }
 
@@ -74,14 +80,32 @@ public sealed class MotionProcessor
         _distance = Math.Min(1000, _distance + length);
 
         double releaseTolerance = _settings.ToleranceDegrees + _settings.HysteresisDegrees;
-        if (!double.IsNaN(_lockedAngle) && LineDistance(angle, _lockedAngle) > releaseTolerance)
+        if (!double.IsNaN(_lockedAngle))
         {
-            _lockedAngle = double.NaN;
-            // A deliberate turn starts a fresh acquisition, without an old-direction bias.
-            _evidenceX = dx;
-            _evidenceY = dy;
-            _distance = length;
-            _hasPrevious = false;
+            bool release = LineDistance(angle, _lockedAngle) > releaseTolerance;
+            if (release)
+            {
+                double radians = _lockedAngle / Degrees;
+                double perpendicular = _lockedAngle == 0 ? dy : _lockedAngle == 90 ? -dx :
+                    -dx * Math.Sin(radians) + dy * Math.Cos(radians);
+                double departure = _microDeparture + perpendicular;
+                // Integer HID packets can be 45/90 degrees even when the whole stroke is nearly
+                // horizontal. Accept only isolated one-count cross-axis packets, inside the
+                // established trajectory cone and at most two net counts before releasing.
+                bool microNoise = Math.Abs(perpendicular) <= 1.000000001 && Math.Abs(departure) <= 2 &&
+                    LineDistance(Direction(_evidenceX, _evidenceY), _lockedAngle) <= releaseTolerance;
+                if (microNoise) { _microDeparture = departure; release = false; }
+            }
+            else _microDeparture = 0;
+            if (release)
+            {
+                _lockedAngle = double.NaN;
+                _microDeparture = 0;
+                _evidenceX = dx;
+                _evidenceY = dy;
+                _distance = length;
+                _hasPrevious = false;
+            }
         }
 
         if (double.IsNaN(_lockedAngle) && _distance >= _settings.DetectionDistance)

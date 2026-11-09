@@ -31,6 +31,7 @@ public sealed partial class StudioViewModel : Observable, IDisposable
  private double _resetAfterMilliseconds=80;
  private double _pollingUntil,_calibrationCounts; private int _scrollTicks,_horizontalScrollTicks; private int _connectionChanges;
  private bool _cursorMode;
+ private bool _selectMovingMouse;
  private string _status="Preparando serviços…",_deviceDetails="Nenhum mouse selecionado.",_profileName="",_profileExecutable="",_calibrationCentimeters="10",_calibrationResult="Aguardando medição.",_selectedPreset="Equilibrado";
  private StudioProfile? _selectedProfile;private MouseDevice? _selectedDevice;
  public ObservableCollection<MouseDevice> Devices {get;}=[];
@@ -46,6 +47,8 @@ public sealed partial class StudioViewModel : Observable, IDisposable
  public string ActiveProfileSummary=>$"Perfil em edição: {ProfileName}";
  public string HookStatus=>_input.IsRunning?(_cursorMode?"Hook ativo • correção do cursor desktop (experimental)":"Hook ativo • apenas remapeamento lateral"):_input.LastError is {} error?$"Hook desligado • {error}":"Hook desligado • entrada original do Windows";
  public string LabSummary=>_lab?.Summary??"Laboratório aguardando inicialização.";
+ public string LabCaptureButtonText=>_lab is {Capturing:true}?"Pausar captura":"Iniciar captura no laboratório";
+ public string LabInputSummary=>$"Entrada do laboratório: {DeviceName}. O hook global é independente e pode ficar desligado neste teste.";
  public string PollingSummary {get;private set;}="Frequência: ainda não medida.";
  public string PollingHistory {get;private set;}="";
  public string ClickSummary {get;private set;}="Nenhum teste de cliques realizado.";
@@ -55,7 +58,7 @@ public sealed partial class StudioViewModel : Observable, IDisposable
  public string ProfileExecutable {get=>_profileExecutable;set {if(Set(ref _profileExecutable,value))Changed();}}
  public string CalibrationCentimeters {get=>_calibrationCentimeters;set=>Set(ref _calibrationCentimeters,value);}
  public string CalibrationResult {get=>_calibrationResult;private set=>Set(ref _calibrationResult,value);}
- public MouseDevice? SelectedDevice {get=>_selectedDevice;set {if(Set(ref _selectedDevice,value)){UpdateDeviceDetails();_lab?.Clear();_polling.Reset();_pollingActive=false;_calibrating=false;Notify(nameof(DeviceName));Notify(nameof(DeviceSummary));}}}
+ public MouseDevice? SelectedDevice {get=>_selectedDevice;set {if(Set(ref _selectedDevice,value)){UpdateDeviceDetails();_lab?.Clear();_polling.Reset();_pollingActive=false;_calibrating=false;Notify(nameof(DeviceName));Notify(nameof(DeviceSummary));Notify(nameof(LabInputSummary));Notify(nameof(LabSummary));}}}
  public StudioProfile? SelectedProfile
  {
   get=>_selectedProfile;
@@ -81,6 +84,7 @@ public sealed partial class StudioViewModel : Observable, IDisposable
  public ICommand StartButtonsCommand {get;}
  public ICommand ToggleLabCommand {get;}
  public ICommand ClearLabCommand {get;}
+ public ICommand UseMovingMouseCommand {get;}
  public ICommand ReplayLabCommand {get;}
  public ICommand StartPollingCommand {get;}
  public ICommand StopPollingCommand {get;}
@@ -101,8 +105,9 @@ public sealed partial class StudioViewModel : Observable, IDisposable
   _windows=windows??new WindowsSettingsService();_input=input??new DesktopInputService();
   RefreshCommand=new ActionCommand(()=>RunAsync(RefreshAsync));ReadSettingsCommand=new ActionCommand(()=>RunAsync(ReadSettingsAsync));ApplySettingsCommand=new ActionCommand(()=>RunAsync(ApplySettingsAsync));RestoreCommand=new ActionCommand(()=>RunAsync(RestoreAsync));
   StartCommand=Command(()=>Start(true));StopCommand=Command(Stop);StartButtonsCommand=Command(()=>Start(false));
-  ToggleLabCommand=Command(()=>{if(_lab is not null){_lab.Capturing=!_lab.Capturing;if(_lab.Capturing)_timer.Start();Notify(nameof(LabSummary));}});
-  ClearLabCommand=Command(()=>{_lab?.Clear();Notify(nameof(LabSummary));});ReplayLabCommand=Command(()=>{_lab?.Replay();Notify(nameof(LabSummary));});
+  ToggleLabCommand=Command(()=>{if(_lab is not null){if(!_lab.Capturing&&_lab.SampleCount>=3000)_lab.Clear();_lab.Capturing=!_lab.Capturing;if(_lab.Capturing)_timer.Start();Notify(nameof(LabSummary));Notify(nameof(LabCaptureButtonText));}});
+  UseMovingMouseCommand=Command(()=>{if(_raw is null)throw new InvalidOperationException("Raw Input não está disponível.");_selectMovingMouse=true;Status="Mova agora o mouse que deseja testar. A captura será iniciada com esse dispositivo.";});
+  ClearLabCommand=Command(()=>{_lab?.Clear();Notify(nameof(LabSummary));});ReplayLabCommand=Command(()=>{_lab?.Replay();Notify(nameof(LabSummary));Notify(nameof(LabCaptureButtonText));});
   StartPollingCommand=Command(()=>{_polling.Reset();_pollingActive=true;_timer.Start();_pollingUntil=Now+10000;Status="Teste de 10 segundos iniciado. Mova continuamente o mouse selecionado.";});
   StopPollingCommand=Command(()=>{_pollingActive=false;UpdateMetrics();});ResetDiagnosticsCommand=Command(()=>{_polling.Reset();_clicks.Reset();_scrollTicks=_horizontalScrollTicks=0;_pollingActive=false;UpdateMetrics();});
   SaveProfileCommand=new ActionCommand(()=>RunAsync(SaveCurrentAsync));NewProfileCommand=new ActionCommand(()=>RunAsync(()=>CreateProfileAsync(false)));DuplicateProfileCommand=new ActionCommand(()=>RunAsync(()=>CreateProfileAsync(true)));
@@ -134,7 +139,13 @@ public sealed partial class StudioViewModel : Observable, IDisposable
  }
  private void OnSampleCore(RawMouseSample sample)
  {
-  if(_disposed||SelectedDevice is not {} device||sample.DeviceId!=device.Id)return;
+  if(_disposed)return;
+  if(_selectMovingMouse&&(sample.DeltaX!=0||sample.DeltaY!=0))
+  {
+   var moving=Devices.FirstOrDefault(d=>d.Id==sample.DeviceId);
+   if(moving is not null){SelectedDevice=moving;_selectMovingMouse=false;_lab?.Clear();if(_lab is not null)_lab.Capturing=true;_timer.Start();Notify(nameof(LabCaptureButtonText));Status=$"Capturando {moving.Name}. Verde: corrigido; cinza: bruto.";}
+  }
+  if(SelectedDevice is not {} device||sample.DeviceId!=device.Id)return;
   if(sample.DeltaX!=0||sample.DeltaY!=0){if(_pollingActive)_polling.Add(sample.TimestampMilliseconds);_lab?.Add(sample.DeltaX,sample.DeltaY,sample.TimestampMilliseconds);if(_calibrating)_calibrationCounts+=Math.Sqrt((double)sample.DeltaX*sample.DeltaX+(double)sample.DeltaY*sample.DeltaY);}
   if(PageIndex is 6 or 9){_scrollTicks+=sample.WheelDelta/120;_horizontalScrollTicks+=sample.HorizontalWheelDelta/120;}
  }
@@ -145,7 +156,7 @@ public sealed partial class StudioViewModel : Observable, IDisposable
  {
   bool wasPolling=_pollingActive;
   if(_pollingActive&&Now>=_pollingUntil){_pollingActive=false;Status="Teste de frequência concluído (estimativa por eventos).";}
-  if(PageIndex==3||_lab is {Capturing:true}){_lab?.InvalidateVisual();Notify(nameof(LabSummary));}if(wasPolling)UpdateMetrics();if(_lab is not {Capturing:true}&&!_pollingActive)_timer.Stop();
+  if(PageIndex==3||_lab is {Capturing:true}){_lab?.InvalidateVisual();Notify(nameof(LabSummary));Notify(nameof(LabCaptureButtonText));}if(wasPolling)UpdateMetrics();if(_lab is not {Capturing:true}&&!_pollingActive)_timer.Stop();
  }
  private void UpdateMetrics()
  {
@@ -163,7 +174,7 @@ public sealed partial class StudioViewModel : Observable, IDisposable
   CapabilityLines.Clear();foreach(var c in new DeviceCapabilityManager().GetCapabilities(d.VendorId?.ToString("X4"),d.ProductId?.ToString("X4")))CapabilityLines.Add($"{c.Name} · {labels[c.Support]}\n{c.Detail}");
  }
  private MotionSettings Motion(bool enabled)=>new(){Enabled=enabled,Strength=Strength/100,ToleranceDegrees=Tolerance,Horizontal=Horizontal,Vertical=Vertical,HorizontalStrength=HorizontalStrength/100,VerticalStrength=VerticalStrength/100,Diagonal=Diagonal,DiagonalDegrees=DiagonalDegrees,Smoothing=Smoothing/100,DetectionDistance=DetectionDistance,HysteresisDegrees=Hysteresis,ResetAfterMilliseconds=_resetAfterMilliseconds};
- private void ConfigureLab()=>_lab?.Configure(Motion(LabCorrection));
+ private void ConfigureLab(){_lab?.Configure(Motion(LabCorrection));Notify(nameof(LabSummary));}
  private void Changed()
  {
   if(_loading)return;try{ConfigureLab();if(_input.IsRunning){_input.ConfigureButtons(X1Action,X2Action);_input.Start(Motion(_cursorMode));}Notify(nameof(SystemSummary));if(_storageReady){_saveTimer.Stop();_saveTimer.Start();}}catch(Exception ex){_input.Stop();Status="Processamento desligado: "+ex.Message;}
@@ -215,12 +226,12 @@ public sealed partial class StudioViewModel : Observable, IDisposable
  {
   if(_loading||preset=="Personalizado")return;
   if(preset=="Desativado"){Stop();LabCorrection=false;Strength=0;return;}
-  Strength=preset=="Leve"?35:preset=="Forte"?100:65;Tolerance=preset=="Leve"?5:preset=="Forte"?12:8;Horizontal=Vertical=true;Smoothing=0;Diagonal=false;LabCorrection=true;
+  Strength=preset=="Leve"?35:preset=="Forte"?100:65;Tolerance=preset=="Leve"?5:preset=="Forte"?12:8;Horizontal=Vertical=true;HorizontalStrength=VerticalStrength=100;DetectionDistance=3;Hysteresis=3;Smoothing=0;Diagonal=false;LabCorrection=true;
  }
  private async Task ReportAsync()
  {
   var dialog=new SaveFileDialog{Filter="Relatório JSON|*.json",FileName="mouse-diagnostics.json"};if(dialog.ShowDialog()!=true)return;
-  var report=new {Version="0.1.0",CreatedUtc=DateTimeOffset.UtcNow,DeviceCount=Devices.Count,Notifications=_connectionChanges,Polling=_polling.Snapshot(),Clicks=_clicks.Snapshot(),VerticalScrollSteps=_scrollTicks,HorizontalScrollSteps=_horizontalScrollTicks,HookRunning=_input.IsRunning,HardwareValidation="Não realizada nesta distribuição",Scope="Somente dados agregados; sem trajetórias ou identificadores persistentes."};
+  var report=new {Version="0.1.1",CreatedUtc=DateTimeOffset.UtcNow,DeviceCount=Devices.Count,Notifications=_connectionChanges,Polling=_polling.Snapshot(),Clicks=_clicks.Snapshot(),VerticalScrollSteps=_scrollTicks,HorizontalScrollSteps=_horizontalScrollTicks,HookRunning=_input.IsRunning,HardwareValidation="Não realizada nesta distribuição",Scope="Somente dados agregados; sem trajetórias ou identificadores persistentes."};
   await File.WriteAllTextAsync(dialog.FileName,JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true}));Status="Relatório técnico exportado sem trajetórias.";
  }
  private void FinishCalibration()

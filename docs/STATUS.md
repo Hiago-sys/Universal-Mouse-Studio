@@ -11,7 +11,7 @@ Estados obrigatórios:
 
 | Área / recurso | Estado | Evidência e limite |
 | --- | --- | --- |
-| Motor determinístico de snapping | FUNCIONAL E TESTADO | Suíte portável do motor: 24 testes aprovados; não comprova correção do cursor Windows |
+| Motor determinístico de snapping | FUNCIONAL E TESTADO | Suíte portável do motor: 30 testes aprovados; não comprova correção do cursor Windows |
 | Intensidade, tolerância, eixos, diagonal, histerese e suavização | FUNCIONAL E TESTADO | Configurações do motor e validação; integração da interface depende de Windows |
 | Quantização fracionária | FUNCIONAL E TESTADO | Não devolve componente intencionalmente removido pela correção |
 | Perfis JSON, validação, importação/exportação e recuperação | FUNCIONAL E TESTADO | Suíte portável de perfis/capacidades/diagnósticos: 19 testes aprovados; permissões reais do usuário ainda exigem teste |
@@ -45,3 +45,6 @@ Estados obrigatórios:
 7. Assinar executáveis/instalador e estabelecer processo de publicação antes de distribuição ampla.
 
 O projeto não usa a expressão “100% funcional” e não considera a fase de snapping concluída por haver somente algoritmo e código de hook.
+
+
+Revisão 0.1.1: correção de pacotes inteiros lentos, seleção do dispositivo pelo movimento, contagem de eventos corrigidos e reprocessamento do laboratório. São 30 testes do motor e 19 portáveis adicionais; ensaio em hardware continua pendente. A versão anterior foi relatada pelo usuário como sem efeito aparente no laboratório, e um caso equivalente foi reproduzido automaticamente.

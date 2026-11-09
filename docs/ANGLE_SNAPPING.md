@@ -50,3 +50,12 @@ Compare trajetórias bruta e transformada no espaço do laboratório. Esse ensai
 - Nenhuma alteração de sensor precisa ser revertida.
 
 Fontes oficiais: [LowLevelMouseProc](https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelmouseproc), [Raw Input](https://learn.microsoft.com/en-us/windows/win32/inputdev/about-raw-input), [SendInput](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput), [MOUSEINPUT](https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-mouseinput).
+
+
+## Revisão 0.1.1 — pacotes inteiros e laboratório
+
+Um teste com 640 pacotes (1,0), exceto um (1,1) a cada oito, reproduziu a falha: a trajetória total tem aproximadamente 7,1°, mas o pacote de desvio mede 45°. Na implementação anterior, 0 dos 80 desvios recebia correção. A nova revisão admite componentes perpendiculares isoladas de até uma contagem dentro do cone da direção já estabelecida, até duas contagens líquidas consecutivas antes de soltar o eixo. Isso resolve o caso sem exigir deslocamentos artificiais fracionários de entrada nos testes. A ambiguidade entre ruído e uma virada pequena não pode ser eliminada: uma virada deliberada lenta pode ter até duas contagens corrigidas antes da liberação. Mudanças maiores continuam liberando o eixo imediatamente.
+
+O quantizador preserva frações durante pacotes alinhados dentro do mesmo lock e não as aplica em eventos identidade. Ao sair do lock, desativar, configurar ou pausar, o estado é limpo; não há cauda gerada por timer. O laboratório trabalha com doubles e não usa esse quantizador, mas compartilha o mesmo motor com a integração do cursor.
+
+O laboratório agora identifica o dispositivo pelo primeiro movimento quando solicitado, apresenta quantidade de eventos alterados e recalcula dados transitórios quando os ajustes mudam. A captura tem limite explícito de 3000 amostras. Nada disso confirma sozinho que o hook alterou o cursor Windows.

@@ -1,0 +1,20 @@
+PASS Six safe defaults with processing disabled
+PASS Round-trip preserves profile identity
+PASS Valid backup recovers corrupt primary with warning
+PASS Recovery preserves corrupt primary bytes
+PASS Recovered profiles save without destroying backup
+PASS Import assigns independent identity
+PASS Duplicate identity rejected
+PASS Invalid pointer speed rejected
+PASS Non-finite motion rejected
+PASS Executable association rejects paths
+PASS Oversized import rejected
+PASS Both corrupt files reported rather than replaced by defaults
+PASS Unknown hardware DPI remains unknown
+PASS Unknown RGB emits no command
+PASS Polling estimator is bounded and calculates 500 Hz fixture
+PASS No samples produce unknown frequency
+PASS Idle gaps and invalid timestamps excluded
+PASS Short clicks counted without asserting physical fault
+PASS Report excludes persistent device identifiers
+19 tests passed.

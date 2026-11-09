@@ -149,7 +149,7 @@ public sealed class DesktopInputService : IDesktopInputService
             var result = processor.Process(dx, dy, time);
             if (Stopwatch.GetElapsedTime(start).TotalMilliseconds > 8) throw new TimeoutException("Processamento de entrada excedeu o limite de 8 ms e foi desativado.");
             if (!double.IsFinite(result.X) || !double.IsFinite(result.Y)) throw new InvalidOperationException("Resultado de movimento inválido.");
-            var (stepX, stepY) = quantizer.QuantizeOrPassthrough((int)dx, (int)dy, result);
+            var (stepX, stepY) = quantizer.QuantizeOrPassthrough((int)dx, (int)dy, result, processor.HasDirectionLock);
             int x = current.X + stepX, y = current.Y + stepY;
             if (x == data.Point.X && y == data.Point.Y) return CallNextHookEx(hook, code, wParam, lParam);
             int left = GetSystemMetrics(76), top = GetSystemMetrics(77), width = GetSystemMetrics(78), height = GetSystemMetrics(79);

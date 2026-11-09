@@ -1,5 +1,7 @@
 # Evidências da entrega 0.1.0
 
+Registro histórico da primeira entrega. Para a correção 0.1.1, veja `ANGLE_SNAPPING_FIX_0.1.1.md`; os números abaixo não são os totais da revisão mais recente.
+
 ## Ambiente
 
 - Compilação em Linux x64, kernel 6.18.57; SDK .NET 10.0.403, runtime de testes 10.0.14.

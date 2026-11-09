@@ -8,11 +8,19 @@ public sealed class MotionLab : FrameworkElement
  private readonly List<(double X,double Y,double Time)> _samples=[];
  private readonly List<Point> _raw=[new(0,0)], _corrected=[new(0,0)];
  private readonly MotionProcessor _processor=new();
- private double _error; private int _count; private double _angle;
+ private double _error; private int _count, _correctedCount; private double _angle;
  public bool Capturing {get;set;}
+ public int SampleCount=>_samples.Count;
  public MotionSettings Settings {get;private set;}=new();
- public string Summary=>$"{(Capturing?"Capturando":"Pausado")} • {_count} amostras / 3000 • ângulo {_angle:F1}° • correção média {(_count==0?0:_error/_count):F2} contagens/evento • {(Settings.Enabled?"algoritmo ativo":"algoritmo desligado")}";
- public void Configure(MotionSettings settings){Settings=settings;_processor.Configure(settings);}
+ public string Summary => _count==0
+  ? $"{(Capturing?"CAPTURANDO — mova o mouse selecionado; se continuar em zero, use Escolher mouse pelo movimento.":"LABORATÓRIO PAUSADO — clique Iniciar captura ou Escolher mouse pelo movimento.")} • 0 amostras"
+  : $"{(Capturing?"CAPTURANDO":_count>=3000?"LIMITE ATINGIDO — inicie uma nova captura":"PAUSADO")} • {_count}/3000 amostras • {_correctedCount} corrigidas • ângulo {_angle:F1}° • correção média {_error/_count:F2} contagens/evento • {(Settings.Enabled?"algoritmo ativo":"algoritmo desligado")} • posição bruta ({_raw[^1].X:F1}; {_raw[^1].Y:F1}) / corrigida ({_corrected[^1].X:F1}; {_corrected[^1].Y:F1})";
+ public void Configure(MotionSettings settings)
+ {
+  if(settings==Settings)return;
+  Settings=settings;_processor.Configure(settings);
+  if(_samples.Count>0){bool capturing=Capturing;Replay();Capturing=capturing;}
+ }
  public void Add(double dx,double dy,double timestamp)
  {
   if(!Capturing || (dx==0&&dy==0))return;
@@ -23,10 +31,11 @@ public sealed class MotionLab : FrameworkElement
  {
   var r=_processor.Process(dx,dy,timestamp); var p=_raw[^1];var q=_corrected[^1];
   _raw.Add(new(p.X+dx,p.Y+dy));_corrected.Add(new(q.X+r.X,q.Y+r.Y));_angle=r.AngleDegrees;
+  if(r.IsCorrected)_correctedCount++;
   _error+=Math.Sqrt((dx-r.X)*(dx-r.X)+(dy-r.Y)*(dy-r.Y));_count++;
  }
- public void Clear(){_samples.Clear();_raw.Clear();_corrected.Clear();_raw.Add(new());_corrected.Add(new());_processor.Reset();_count=0;_error=0;_angle=0;InvalidateVisual();}
- public void Replay(){Capturing=false;_raw.Clear();_corrected.Clear();_raw.Add(new());_corrected.Add(new());_processor.Reset();_count=0;_error=0;foreach(var s in _samples)Process(s.X,s.Y,s.Time);InvalidateVisual();}
+ public void Clear(){_samples.Clear();_raw.Clear();_corrected.Clear();_raw.Add(new());_corrected.Add(new());_processor.Reset();_count=0;_correctedCount=0;_error=0;_angle=0;InvalidateVisual();}
+ public void Replay(){Capturing=false;_raw.Clear();_corrected.Clear();_raw.Add(new());_corrected.Add(new());_processor.Reset();_count=0;_correctedCount=0;_error=0;foreach(var s in _samples)Process(s.X,s.Y,s.Time);InvalidateVisual();}
  protected override void OnRender(DrawingContext dc)
  {
   base.OnRender(dc);double w=ActualWidth,h=ActualHeight;if(w<1||h<1)return;

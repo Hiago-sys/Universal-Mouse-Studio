@@ -1,4 +1,15 @@
-Versão inicial experimental do Universal Mouse Studio, WPF/.NET 10 para Windows x64.
+Correção do laboratório de Angle Snapping:
+
+- Regressão reproduzida antes da correção: 0/80 desvios pequenos corrigidos numa trajetória inteira quase horizontal.
+- Pacotes pequenos não desfazem imediatamente uma direção estável; viradas deliberadas são liberadas com perda limitada de até duas contagens nesse caso ambíguo.
+- Frações de intensidades intermediárias sobrevivem a eventos alinhados.
+- Contagem explícita de amostras corrigidas, estados de captura e limite; seleção do mouse pelo movimento.
+- Ajustes recalculam a comparação já capturada. O hook não precisa estar ativo para testar no laboratório.
+- 30 testes de movimento + 19 de perfis/capacidades/diagnósticos. Testes automáticos não são validação em mouse físico.
+
+Teste sugerido: Forte → Aplicar algoritmo no laboratório → Escolher mouse pelo movimento → traçar linha quase horizontal e verificar amostras/corrigidas. Se as amostras continuarem em zero ou não houver correção, isso precisa ser investigado, não tratado como sucesso.
+
+Versão experimental 0.1.1 do Universal Mouse Studio, WPF/.NET 10 para Windows x64.
 
 **Para obter tudo:** baixe `UniversalMouseStudio-completo.zip`. Ele contém a pasta raiz UniversalMouseStudio, o código-fonte, recursos XAML, configurações, testes, scripts, documentação e o aplicativo com runtime em `artifacts/portable-win-x64/`.
 

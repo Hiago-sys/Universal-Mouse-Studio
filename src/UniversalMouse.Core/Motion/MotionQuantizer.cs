@@ -6,12 +6,12 @@ public sealed class MotionQuantizer
     private double _remainderX, _remainderY;
     public void Reset() => _remainderX = _remainderY = 0;
 
-    /// <summary>Exact integer identity events bypass rounding and discard stale corrected fractions.</summary>
-    public (int X, int Y) QuantizeOrPassthrough(int rawX, int rawY, MotionResult result)
+    /// <summary>Identity events bypass rounding. Fractions can survive aligned packets inside a confirmed direction lock; turns discard them.</summary>
+    public (int X, int Y) QuantizeOrPassthrough(int rawX, int rawY, MotionResult result, bool preserveFractionOnIdentity = false)
     {
         if (result.X == rawX && result.Y == rawY)
         {
-            Reset();
+            if (!preserveFractionOnIdentity) Reset();
             return (rawX, rawY);
         }
         return Quantize(result.X, result.Y);
