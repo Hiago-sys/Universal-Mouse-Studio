@@ -14,9 +14,9 @@ internal static class Program
   try
   {
    System.Windows.Media.RenderOptions.ProcessRenderMode=System.Windows.Interop.RenderMode.SoftwareOnly;
-   var app=new UniversalMouse.App.App();app.InitializeComponent();
+   var app=new UniversalMouse.App.App();app.InitializeComponent();app.ShutdownMode=ShutdownMode.OnExplicitShutdown;
    var window=new MainWindow();
-   Check(window.Title.Contains("0.1.1")&&window.FindName("Lab") is MotionLab,"XAML real e laboratório são carregados");
+   Check(window.Title.Contains("0.1.2")&&window.FindName("Lab") is MotionLab,"XAML real e laboratório são carregados");
    var lab=new MotionLab();
    lab.Configure(new MotionSettings{Enabled=true});lab.Capturing=true;
    for(int i=0;i<640;i++)lab.Add(1,i%8==7?1:0,i*2);
@@ -35,10 +35,17 @@ internal static class Program
    Check(lab.SampleCount==640,"Captura pausada não aceita novas amostras");
    lab.Configure(new MotionSettings{Enabled=true,Strength=1});lab.Replay();
    Check(!lab.Capturing&&lab.CorrectedSampleCount==80&&Near(lab.CorrectedPosition.Y,0),"Repetir reprocessa dados reais do controle sem reinjetar entrada");
+   lab.Configure(new MotionSettings{Enabled=true,Strength=0});
+   Check(lab.CorrectedSampleCount==0&&lab.RawPosition==lab.CorrectedPosition,"Intensidade zero restaura a trajetória sem precisar capturar novamente");
+   lab.Configure(new MotionSettings{Enabled=true,Strength=1,Smoothing=0.9});
+   Check(lab.SampleCount==640&&double.IsFinite(lab.CorrectedPosition.X),"Suavização recalcula a captura de forma finita");
    lab.Clear();
    Check(lab.SampleCount==0&&lab.CorrectedSampleCount==0&&lab.RawPosition==new Point()&&lab.CorrectedPosition==new Point(),"Limpar remove trajetórias e estatísticas transitórias");
    lab.Capturing=true;for(int i=0;i<3100;i++)lab.Add(1,0,i);
    Check(lab.SampleCount==3000&&!lab.Capturing,"Limite de captura interrompe o teste em 3000 amostras");
+   bool closed=false;window.Closed+=(_,_)=>closed=true;window.Close();
+   System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Background,new Action(()=>{}));
+   Check(closed,"Fechamento seguro de janela ainda não exibida");
    Console.WriteLine($"RESULT {passed}/{passed} testes WPF aprovados; entradas sintetizadas, sem mouse físico nem hook global.");
    return 0;
   }

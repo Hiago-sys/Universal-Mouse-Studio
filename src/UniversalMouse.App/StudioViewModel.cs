@@ -23,6 +23,7 @@ public sealed partial class StudioViewModel : Observable, IDisposable
  private readonly PollingEstimator _polling=new();
  private readonly ClickDiagnostics _clicks=new();
  private readonly DispatcherTimer _timer=new(){Interval=TimeSpan.FromMilliseconds(100)};
+ private readonly DispatcherTimer _inputTimer=new(){Interval=TimeSpan.FromMilliseconds(500)};
  private readonly DispatcherTimer _saveTimer=new(){Interval=TimeSpan.FromMilliseconds(900)};
  private RawInputService? _raw; private MotionLab? _lab;
  private WindowsMouseSettings? _opening;
@@ -45,7 +46,12 @@ public sealed partial class StudioViewModel : Observable, IDisposable
  public string DeviceSummary=>SelectedDevice is {} d?$"{d.Connection} • VID {d.VendorId?.ToString("X4")??"não informado"} / PID {d.ProductId?.ToString("X4")??"não informado"}":"Conecte um dispositivo e atualize a lista.";
  public string SystemSummary=>$"Ponteiro {PointerSpeed}/20 • Aceleração {(EnhancePointerPrecision?"ativada":"desativada")} (valores dos controles; releia para confirmar o Windows)";
  public string ActiveProfileSummary=>$"Perfil em edição: {ProfileName}";
- public string HookStatus=>_input.IsRunning?(_cursorMode?"Hook ativo • correção do cursor desktop (experimental)":"Hook ativo • apenas remapeamento lateral"):_input.LastError is {} error?$"Hook desligado • {error}":"Hook desligado • entrada original do Windows";
+ public string HookStatus=>_input.IsRunning?(_cursorMode?"Hook instalado • correção do cursor desktop (experimental)":"Hook instalado • apenas remapeamento lateral"):_input.LastError is {} error?$"Hook desligado • {error}":"Hook desligado • entrada original do Windows";
+ public bool IsProcessingActive=>_input.IsRunning;
+ public string CursorSummary
+ {
+  get{var s=_input.GetStatistics();return $"Cursor desktop: {s.PhysicalMoves} eventos físicos • {s.TransformedMoves} transformados • {s.ReinjectedMoves} reinjeções aceitas pelo Windows • {s.ZeroDeltaMoves} com deslocamento zero. Não comprova efeito em jogos/Raw Input.";}
+ }
  public string LabSummary=>_lab?.Summary??"Laboratório aguardando inicialização.";
  public string LabCaptureButtonText=>_lab is {Capturing:true}?"Pausar captura":"Iniciar captura no laboratório";
  public string LabInputSummary=>$"Entrada do laboratório: {DeviceName}. O hook global é independente e pode ficar desligado neste teste.";
@@ -114,7 +120,7 @@ public sealed partial class StudioViewModel : Observable, IDisposable
   DeleteProfileCommand=new ActionCommand(()=>RunAsync(DeleteProfileAsync));ApplyProfileCommand=new ActionCommand(()=>RunAsync(async()=>{await ApplySettingsAsync();Status="Perfil aplicado globalmente ao Windows. O estado de ativação do hook não foi alterado.";}));
   ImportProfileCommand=new ActionCommand(()=>RunAsync(ImportAsync));ExportProfileCommand=new ActionCommand(()=>RunAsync(ExportAsync));ResetProfilesCommand=new ActionCommand(()=>RunAsync(ResetProfilesAsync));ReportCommand=new ActionCommand(()=>RunAsync(ReportAsync));
   StartCalibrationCommand=Command(()=>{_calibrationCounts=0;_calibrating=true;CalibrationResult="Capturando contagens relativas do mouse selecionado…";});FinishCalibrationCommand=Command(FinishCalibration);
-  _timer.Tick+=OnTick;_saveTimer.Tick+=OnSaveTick;_input.StateChanged+=OnInputStateChanged;
+  _inputTimer.Tick+=(_,_)=>Notify(nameof(CursorSummary));_timer.Tick+=OnTick;_saveTimer.Tick+=OnSaveTick;_input.StateChanged+=OnInputStateChanged;
  }
  private ICommand Command(Action action)=>new ActionCommand(()=>{try{action();}catch(Exception ex){TechnicalLog.Record("command",ex.HResult);Status="Erro: "+ex.Message;}});
  private static double Now=>Stopwatch.GetTimestamp()*1000.0/Stopwatch.Frequency;
@@ -151,7 +157,7 @@ public sealed partial class StudioViewModel : Observable, IDisposable
  }
  public void ReportForegroundError(string message){AutoProfiles=false;Status="Automação de perfis indisponível: "+message;}
  public async Task SavePendingAsync(){if(_storageReady)await SaveCurrentAsync();}
- private void OnInputStateChanged()=>System.Windows.Application.Current.Dispatcher.BeginInvoke(()=>{if(!_disposed){Notify(nameof(HookStatus));if(_input.LastError is not null)TechnicalLog.Record("desktop-input",1);}});
+ private void OnInputStateChanged()=>System.Windows.Application.Current.Dispatcher.BeginInvoke(()=>{if(!_disposed){Notify(nameof(HookStatus));Notify(nameof(CursorSummary));if(_input.IsRunning)_inputTimer.Start();else _inputTimer.Stop();if(_input.LastError is not null)TechnicalLog.Record("desktop-input",1);}});
  private void OnTick(object? sender,EventArgs e)
  {
   bool wasPolling=_pollingActive;
@@ -231,7 +237,7 @@ public sealed partial class StudioViewModel : Observable, IDisposable
  private async Task ReportAsync()
  {
   var dialog=new SaveFileDialog{Filter="Relatório JSON|*.json",FileName="mouse-diagnostics.json"};if(dialog.ShowDialog()!=true)return;
-  var report=new {Version="0.1.1",CreatedUtc=DateTimeOffset.UtcNow,DeviceCount=Devices.Count,Notifications=_connectionChanges,Polling=_polling.Snapshot(),Clicks=_clicks.Snapshot(),VerticalScrollSteps=_scrollTicks,HorizontalScrollSteps=_horizontalScrollTicks,HookRunning=_input.IsRunning,HardwareValidation="Não realizada nesta distribuição",Scope="Somente dados agregados; sem trajetórias ou identificadores persistentes."};
+  var report=new {Version="0.1.2",CreatedUtc=DateTimeOffset.UtcNow,DeviceCount=Devices.Count,Notifications=_connectionChanges,Polling=_polling.Snapshot(),Clicks=_clicks.Snapshot(),VerticalScrollSteps=_scrollTicks,HorizontalScrollSteps=_horizontalScrollTicks,HookRunning=_input.IsRunning,HardwareValidation="Não realizada nesta distribuição",Scope="Somente dados agregados; sem trajetórias ou identificadores persistentes."};
   await File.WriteAllTextAsync(dialog.FileName,JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true}));Status="Relatório técnico exportado sem trajetórias.";
  }
  private void FinishCalibration()
@@ -251,5 +257,5 @@ public sealed partial class StudioViewModel : Observable, IDisposable
   var resources=System.Windows.Application.Current.Resources;void Color(string key,string color)=>resources[key]=new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
   Color("BackgroundBrush",LightTheme?"#F1F5FA":"#0C1320");Color("SurfaceBrush",LightTheme?"#E3EAF3":"#141F30");Color("CardBrush",LightTheme?"#D4DFED":"#1B293D");Color("TextBrush",LightTheme?"#152238":"#EBF0F8");Color("MutedBrush",LightTheme?"#415571":"#A5B6CD");Color("AccentBrush",LightTheme?"#006C58":"#51D6BD");
  }
- public void Dispose(){if(_disposed)return;_disposed=true;_saveTimer.Stop();_timer.Stop();_input.StateChanged-=OnInputStateChanged;_input.Dispose();_raw?.Dispose();_lab?.Clear();}
+ public void Dispose(){if(_disposed)return;_disposed=true;_saveTimer.Stop();_timer.Stop();_inputTimer.Stop();_input.StateChanged-=OnInputStateChanged;_input.Dispose();_raw?.Dispose();_lab?.Clear();}
 }

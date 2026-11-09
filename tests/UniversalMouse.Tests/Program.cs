@@ -247,6 +247,34 @@ Test("Pacotes de quatro contagens mantêm correção de um pequeno desvio isolad
     for(int i=0;i<160;i++){int dy=i%2;var r=p.Process(4,dy,i);raw+=dy;corrected+=r.Y;}
     True(corrected<raw*0.5,$"Desvio bruto {raw}; corrigido {corrected}");
 });
+Test("Suavização não amplifica deslocamento ao desacelerar", () =>
+{
+    var p=Make(full with{Smoothing=0.9});p.Process(1000,1,0);
+    var r=p.Process(1,0,1);True(Math.Sqrt(r.X*r.X+r.Y*r.Y)<=1+1e-9);
+    var zero=p.Process(0,0,2);Near(0,zero.X);Near(0,zero.Y);
+});
+Test("Trajetórias lentas são simétricas nos quatro sentidos", () =>
+{
+    foreach(int sx in new[]{-1,1})foreach(int sy in new[]{-1,1})
+    {var p=Make(new MotionSettings{Enabled=true});double y=0;for(int i=0;i<640;i++)y+=p.Process(sx,i%8==7?sy:0,i).Y;Near(sy*28,y,1e-8);}
+});
+Test("Mesma sequência espacial mantém resultado em 125 e 8000 eventos por segundo", () =>
+{
+    var a=Make(new MotionSettings{Enabled=true});var b=Make(new MotionSettings{Enabled=true});
+    for(int i=0;i<2000;i++){int y=i%8==7?1:0;var x=a.Process(1,y,i*8d);var z=b.Process(1,y,i*0.125);Near(x.X,z.X);Near(x.Y,z.Y);}
+});
+Test("Cinquenta mil movimentos variados mantêm saída finita e sem ganho de velocidade", () =>
+{
+    var random=new Random(20261109);var p=Make(full with{Smoothing=0.8,Diagonal=true});
+    for(int i=0;i<50000;i++)
+    {double x=random.Next(-1000,1001),y=random.Next(-1000,1001);var r=p.Process(x,y,i);True(double.IsFinite(r.X)&&double.IsFinite(r.Y));True(r.X*r.X+r.Y*r.Y<=x*x+y*y+1e-6);}
+});
+Test("Desativação com suavização limpa estado e preserva novos eventos", () =>
+{
+    var p=Make(full with{Smoothing=0.9});p.Process(1000,1,0);p.Configure(full with{Enabled=false,Smoothing=0.9});
+    var r=p.Process(1,-1,1);Near(1,r.X);Near(-1,r.Y);True(!p.HasDirectionLock);
+});
+
 Test("Processamento determinístico e sem alocações no trecho quente", () =>
 {
     var a = Make(); var b = Make();

@@ -3,7 +3,7 @@
 [Setup]
 AppId={{7DA9E1CB-231A-4EC7-9D37-63875B41B3A7}
 AppName=Universal Mouse Studio
-AppVersion=0.1.1
+AppVersion=0.1.2
 DefaultDirName={localappdata}\Programs\UniversalMouseStudio
 DefaultGroupName=Universal Mouse Studio
 PrivilegesRequired=lowest

@@ -16,6 +16,8 @@ public sealed class DesktopInputService : IDesktopInputService
     static readonly System.Collections.Concurrent.ConcurrentDictionary<IntPtr, HookProc> RetainedHooks = new();
     static readonly nuint InjectionTag = 0x554D5301;
     readonly object lifecycle = new();
+    long physicalMoves, transformedMoves, reinjectedMoves, zeroDeltaMoves;
+    public DesktopInputStatistics GetStatistics()=>new(Interlocked.Read(ref physicalMoves),Interlocked.Read(ref transformedMoves),Interlocked.Read(ref reinjectedMoves),Interlocked.Read(ref zeroDeltaMoves));
     Thread? thread;
     uint threadId;
     IntPtr hook;
@@ -77,6 +79,12 @@ public sealed class DesktopInputService : IDesktopInputService
             PeekMessage(out _, IntPtr.Zero, 0, 0, 0);
             if (stopRequested) return;
             if (!RegisterHotKey(IntPtr.Zero, 1, 0x4003, 0x7A)) throw new Win32Exception(Marshal.GetLastWin32Error(), "Não foi possível registrar Ctrl+Alt+F11. O processamento não foi ativado.");
+            // Warm managed motion code before installing the latency-sensitive callback.
+            processor.Configure(Volatile.Read(ref requested));
+            for(int i=0;i<64;i++) quantizer.Quantize(processor.Process(10,1,i).X,0);
+            processor.Reset(); quantizer.Reset();
+            Interlocked.Exchange(ref physicalMoves,0);Interlocked.Exchange(ref transformedMoves,0);
+            Interlocked.Exchange(ref reinjectedMoves,0);Interlocked.Exchange(ref zeroDeltaMoves,0);
             callback = OnMouse;
             hook = SetWindowsHookEx(14, callback, GetModuleHandle(null), 0);
             if (hook == IntPtr.Zero) throw new Win32Exception();
@@ -137,16 +145,19 @@ public sealed class DesktopInputService : IDesktopInputService
                 }
             }
             if (message != 0x0200) return CallNextHookEx(hook, code, wParam, lParam);
+            Interlocked.Increment(ref physicalMoves);
             var settings = Volatile.Read(ref requested);
             if (!ReferenceEquals(settings, configured)) { processor.Configure(settings); quantizer.Reset(); configured = settings; }
             if (!settings.Enabled) return CallNextHookEx(hook, code, wParam, lParam);
             if (!GetCursorPos(out var current)) throw new Win32Exception();
             double dx = data.Point.X - current.X, dy = data.Point.Y - current.Y;
+            if(dx==0&&dy==0)Interlocked.Increment(ref zeroDeltaMoves);
             if (Math.Abs(dx) > 16384 || Math.Abs(dy) > 16384) { processor.Reset(); quantizer.Reset(); lastMovement = double.NaN; return CallNextHookEx(hook, code, wParam, lParam); }
             double time = start * 1000.0 / Stopwatch.Frequency;
             if (double.IsNaN(lastMovement) || time - lastMovement > settings.ResetAfterMilliseconds) quantizer.Reset();
             lastMovement = time;
             var result = processor.Process(dx, dy, time);
+            if(result.IsCorrected)Interlocked.Increment(ref transformedMoves);
             if (Stopwatch.GetElapsedTime(start).TotalMilliseconds > 8) throw new TimeoutException("Processamento de entrada excedeu o limite de 8 ms e foi desativado.");
             if (!double.IsFinite(result.X) || !double.IsFinite(result.Y)) throw new InvalidOperationException("Resultado de movimento inválido.");
             var (stepX, stepY) = quantizer.QuantizeOrPassthrough((int)dx, (int)dy, result, processor.HasDirectionLock);
@@ -160,6 +171,7 @@ public sealed class DesktopInputService : IDesktopInputService
                 Y = DesktopCoordinates.NormalizePixel(y, top, height),
                 Flags = 0xC001, ExtraInfo = InjectionTag } } }; // MOVE | ABSOLUTE | VIRTUALDESK
             if (SendInput(1, moveInput, Marshal.SizeOf<NativeInput>()) != 1) throw new Win32Exception(Marshal.GetLastWin32Error(), "Reinjeção recusada pelo Windows; movimento original preservado.");
+            Interlocked.Increment(ref reinjectedMoves);
             return new IntPtr(1); // Suppress only after confirmed successful injection.
         }
         catch (Exception ex)

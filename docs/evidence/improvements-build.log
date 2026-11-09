@@ -1,0 +1,14 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  UniversalMouse.Core -> /workspace/work/UniversalMouseStudio/src/UniversalMouse.Core/bin/Release/net10.0/UniversalMouse.Core.dll
+  UniversalMouse.Tests -> /workspace/work/UniversalMouseStudio/tests/UniversalMouse.Tests/bin/Release/net10.0/UniversalMouse.Tests.dll
+  UniversalMouse.ProfileTests -> /workspace/work/UniversalMouseStudio/tests/UniversalMouse.ProfileTests/bin/Release/net10.0/UniversalMouse.ProfileTests.dll
+  UniversalMouse.Windows -> /workspace/work/UniversalMouseStudio/src/UniversalMouse.Windows/bin/Release/net10.0-windows/UniversalMouse.Windows.dll
+  UniversalMouse.App -> /workspace/work/UniversalMouseStudio/src/UniversalMouse.App/bin/Release/net10.0-windows/UniversalMouseStudio.dll
+  UniversalMouse.WpfTests -> /workspace/work/UniversalMouseStudio/tests/UniversalMouse.WpfTests/bin/Release/net10.0-windows/UniversalMouse.WpfTests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:09.94
