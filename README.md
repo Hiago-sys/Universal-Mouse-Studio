@@ -1,7 +1,11 @@
-# Universal Mouse Studio 0.1.1
+# Universal Mouse Studio 0.1.2
 
 Aplicação desktop C#/.NET 10 e WPF para Windows 10/11 x64. Esta entrega contém código-fonte, build Release e pacote portátil com o runtime incluído. **As integrações Windows foram compiladas em Linux, mas ainda não foram executadas em Windows nem validadas em mouse físico.** Não distribua o modo de correção experimental como produto validado antes do roteiro de ensaios.
 
+
+## Aprimoramentos 0.1.2
+
+Suavização sem amplificar a velocidade na desaceleração, contadores de correção/reinjeção do cursor e botão Minimizar para manter o processamento funcionando. Ao fechar com o hook ativo, a aplicação oferece minimizar ou encerrar. O indicador diz hook instalado; os contadores mostram o que foi realmente recebido/calculado/aceito pelo Windows. O laboratório mantém sua medição independente. Leia [detalhes e limites](docs/IMPROVEMENTS_0.1.2.md).
 
 ## Correção 0.1.1 — movimentos lentos no laboratório
 

@@ -7,8 +7,11 @@ public interface IWindowsSettingsService
     void Apply(WindowsMouseSettings settings);
 }
 
+public readonly record struct DesktopInputStatistics(long PhysicalMoves, long TransformedMoves, long ReinjectedMoves, long ZeroDeltaMoves);
+
 public interface IDesktopInputService : IDisposable
 {
+    DesktopInputStatistics GetStatistics() => default;
     bool IsRunning { get; }
     string? LastError { get; }
     event Action? StateChanged;

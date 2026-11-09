@@ -2,7 +2,7 @@ namespace UniversalMouse.Core.Motion;
 
 /// <summary>
 /// Stateful, single-consumer relative-motion transformer. No timers, tasks or allocations in Process.
-/// A decaying evidence vector selects a line, and the current event must also agree with that line.
+/// A decaying evidence vector selects a line; bounded integer noise is tolerated within it.
 /// Deliberate turns release the lock. Perpendicular displacement removed by snapping is intentional:
 /// it must not be stored then replayed after a stop. Quantization remainder is handled separately.
 /// </summary>
@@ -138,6 +138,9 @@ public sealed class MotionProcessor
         {
             x = x * (1 - _settings.Smoothing) + _previousX * _settings.Smoothing;
             y = y * (1 - _settings.Smoothing) + _previousY * _settings.Smoothing;
+            // Deceleration must not replay the speed of the previous packet as a cursor jump.
+            double smoothedLength = Math.Sqrt(x * x + y * y);
+            if (smoothedLength > length) { double scale = length / smoothedLength; x *= scale; y *= scale; }
         }
         _previousX = x;
         _previousY = y;

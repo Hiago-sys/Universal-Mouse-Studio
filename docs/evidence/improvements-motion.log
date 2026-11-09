@@ -1,0 +1,38 @@
+PASS Horizontal reta preserva deslocamento nos dois sentidos
+PASS Vertical reta preserva deslocamento nos dois sentidos
+PASS Pequenos desvios horizontais são corrigidos de verdade
+PASS Pequenos desvios verticais são corrigidos
+PASS Desvio grande não é transformado em eixo
+PASS Diagonal desligada por padrão não corrige diagonal
+PASS Diagonal configurada corrige 45 e 135 graus
+PASS Movimento circular preserva pontos fora das tolerâncias
+PASS Movimentos lentos adquirem direção após distância mínima
+PASS Movimentos rápidos são corrigidos sem saturar
+PASS Movimentos curtos abaixo do limiar passam sem alteração
+PASS Mudança horizontal para vertical libera eixo anterior
+PASS Pausa limpa estado de aquisição e não cria cauda
+PASS Ativação e desativação são imediatas e limpam estado
+PASS Intensidade zero é identidade; intensidade intermediária interpola
+PASS Forças de eixos e desativação são independentes
+PASS Histerese mantém eixo perto do limite e libera fora dele
+PASS Quantização conserva frações sem armazenar erro angular
+PASS Entradas inválidas são rejeitadas; configurações inválidas não substituem as válidas
+PASS Evento sem transformação preserva inteiros após resíduos de meio pixel
+PASS Quantização de evento corrigido preserva frações até um passthrough
+PASS Coordenadas absolutas representam cada pixel em dimensões de desktop comuns e extremas
+PASS Conversão de coordenadas recusa dimensões e pixels inválidos sem overflow
+LABTRACE brutoY=80.000 corrigidoY=28.000 eventosCorrigidos=80
+PASS Trajetória lenta em degraus inteiros recebe correção no laboratório
+PASS Pequeno movimento vertical em degraus inteiros também é corrigido
+PASS Ruído perpendicular isolado não desmonta a direção dominante
+PASS Virada intencional lenta não é bloqueada por ruído permitido
+PASS Força intermediária conserva frações entre pacotes alinhados
+PASS Pacotes de quatro contagens mantêm correção de um pequeno desvio isolado
+PASS Suavização não amplifica deslocamento ao desacelerar
+PASS Trajetórias lentas são simétricas nos quatro sentidos
+PASS Mesma sequência espacial mantém resultado em 125 e 8000 eventos por segundo
+PASS Cinquenta mil movimentos variados mantêm saída finita e sem ganho de velocidade
+PASS Desativação com suavização limpa estado e preserva novos eventos
+PASS Processamento determinístico e sem alocações no trecho quente
+RESULT 35/35 testes aprovados
+BENCHMARK {"runtime":"10.0.14","os":"Unix 6.18.57.0","architecture":"X64","events":2000000,"seconds":0.3724214,"nanosecondsPerEvent":186.2107,"allocatedBytes":0,"checksum":21000000,"limitation":"Custo do algoritmo isolado; n\u00E3o mede lat\u00EAncia de cursor, USB, hooks ou interface."}

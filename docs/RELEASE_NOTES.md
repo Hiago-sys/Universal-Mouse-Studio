@@ -1,3 +1,13 @@
+Universal Mouse Studio 0.1.2
+
+- Suavização limitada ao deslocamento atual, evitando amplificação na desaceleração.
+- Contadores separados de eventos físicos, transformações e reinjeções aceitas pelo Windows.
+- Aquecimento do motor antes de instalar o hook.
+- Botão Minimizar e escolha explícita ao fechar com processamento ativo.
+- Fechamento assíncrono sem reentrada e mais testes de movimento/laboratório.
+
+A suíte atual tem 35 testes de movimento, 19 portáveis adicionais e 12 WPF/lifecycle no Windows, com entradas sintetizadas. Não é certificação em hardware real. Abaixo, as notas anteriores de correção e as instruções de download continuam aplicáveis.
+
 Correção do laboratório de Angle Snapping:
 
 - Regressão reproduzida antes da correção: 0/80 desvios pequenos corrigidos numa trajetória inteira quase horizontal.
