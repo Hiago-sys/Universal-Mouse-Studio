@@ -33,6 +33,7 @@ jobs:
           Copy-Item artifacts/portable-win-x64/* $target -Recurse -Force
           Compress-Archive artifacts/complete/UniversalMouseStudio artifacts/downloads/UniversalMouseStudio-completo.zip
           Copy-Item artifacts/UniversalMouseStudio-win-x64.zip artifacts/downloads/
+          Copy-Item artifacts/wpf-motion-lab.png artifacts/downloads/
           Get-ChildItem artifacts/downloads/*.zip | ForEach-Object {
             $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
             "$hash  $($_.Name)"

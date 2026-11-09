@@ -5,7 +5,7 @@ Correção do laboratório de Angle Snapping:
 - Frações de intensidades intermediárias sobrevivem a eventos alinhados.
 - Contagem explícita de amostras corrigidas, estados de captura e limite; seleção do mouse pelo movimento.
 - Ajustes recalculam a comparação já capturada. O hook não precisa estar ativo para testar no laboratório.
-- 30 testes de movimento + 19 de perfis/capacidades/diagnósticos. Testes automáticos não são validação em mouse físico.
+- 30 testes de movimento + 19 de perfis/capacidades/diagnósticos + 9 do controle WPF no Windows, incluindo renderização com dados sintetizados. Testes automáticos não são validação em mouse físico.
 
 Teste sugerido: Forte → Aplicar algoritmo no laboratório → Escolher mouse pelo movimento → traçar linha quase horizontal e verificar amostras/corrigidas. Se as amostras continuarem em zero ou não houver correção, isso precisa ser investigado, não tratado como sucesso.
 

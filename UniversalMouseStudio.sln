@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniversalMouse.Tests", "tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniversalMouse.ProfileTests", "tests\UniversalMouse.ProfileTests\UniversalMouse.ProfileTests.csproj", "{FBEF6A13-1242-4521-A6F6-0A2D3EF5D7F7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniversalMouse.WpfTests", "tests\UniversalMouse.WpfTests\UniversalMouse.WpfTests.csproj", "{DA7B2394-B414-48AB-8AC2-8183E1E2C45F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,18 @@ Global
 		{FBEF6A13-1242-4521-A6F6-0A2D3EF5D7F7}.Release|x64.Build.0 = Release|Any CPU
 		{FBEF6A13-1242-4521-A6F6-0A2D3EF5D7F7}.Release|x86.ActiveCfg = Release|Any CPU
 		{FBEF6A13-1242-4521-A6F6-0A2D3EF5D7F7}.Release|x86.Build.0 = Release|Any CPU
+		{DA7B2394-B414-48AB-8AC2-8183E1E2C45F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA7B2394-B414-48AB-8AC2-8183E1E2C45F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA7B2394-B414-48AB-8AC2-8183E1E2C45F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DA7B2394-B414-48AB-8AC2-8183E1E2C45F}.Debug|x64.Build.0 = Debug|Any CPU
+		{DA7B2394-B414-48AB-8AC2-8183E1E2C45F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DA7B2394-B414-48AB-8AC2-8183E1E2C45F}.Debug|x86.Build.0 = Debug|Any CPU
+		{DA7B2394-B414-48AB-8AC2-8183E1E2C45F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA7B2394-B414-48AB-8AC2-8183E1E2C45F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA7B2394-B414-48AB-8AC2-8183E1E2C45F}.Release|x64.ActiveCfg = Release|Any CPU
+		{DA7B2394-B414-48AB-8AC2-8183E1E2C45F}.Release|x64.Build.0 = Release|Any CPU
+		{DA7B2394-B414-48AB-8AC2-8183E1E2C45F}.Release|x86.ActiveCfg = Release|Any CPU
+		{DA7B2394-B414-48AB-8AC2-8183E1E2C45F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -97,5 +111,6 @@ Global
 		{91A3BD8D-A409-4507-AAE2-D25AEE0267EF} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{B9E3BA7F-F86F-4283-97E9-7E6A0C4A91F4} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{FBEF6A13-1242-4521-A6F6-0A2D3EF5D7F7} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{DA7B2394-B414-48AB-8AC2-8183E1E2C45F} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

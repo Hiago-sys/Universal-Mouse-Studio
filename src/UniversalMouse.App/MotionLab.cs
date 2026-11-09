@@ -11,6 +11,9 @@ public sealed class MotionLab : FrameworkElement
  private double _error; private int _count, _correctedCount; private double _angle;
  public bool Capturing {get;set;}
  public int SampleCount=>_samples.Count;
+ public int CorrectedSampleCount=>_correctedCount;
+ public Point RawPosition=>_raw[^1];
+ public Point CorrectedPosition=>_corrected[^1];
  public MotionSettings Settings {get;private set;}=new();
  public string Summary => _count==0
   ? $"{(Capturing?"CAPTURANDO — mova o mouse selecionado; se continuar em zero, use Escolher mouse pelo movimento.":"LABORATÓRIO PAUSADO — clique Iniciar captura ou Escolher mouse pelo movimento.")} • 0 amostras"

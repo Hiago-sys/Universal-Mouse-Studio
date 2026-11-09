@@ -38,3 +38,8 @@ Logs em `docs/evidence/angle-*`. O benchmark da versão 0.1.0 é histórico e n�
 ## Limites ainda abertos
 
 Não foi executado ensaio interativo em Windows/mouse físico neste ambiente. A integração de cursor permanece experimental, e Raw Input de jogos não é substituído pelo hook. O relato do usuário não deve ser marcado como resolvido em seu computador apenas pelo teste sintetizado. O novo pacote oferece uma correção comprovada do caso reproduzido e meios mais claros de verificar o caso real.
+
+
+## Verificação adicional do controle WPF no Windows
+
+`tests/UniversalMouse.WpfTests` carrega o XAML e o controle real, alimenta pacotes sintetizados, confere estatísticas/reprocessamento, renderiza as trajetórias em bitmap e verifica pixels das duas cores. Também cobre desligamento do algoritmo, pausa, reprodução, limpeza e limite de amostras. Não instala hook nem simula mouse físico. O build Windows executa esses nove testes antes de publicar; uma falha impede a Release. A imagem gerada é publicada como `wpf-motion-lab.png`. Essa imagem é uma renderização automatizada do controle com dados sintetizados, não captura da tela ou mouse do usuário.
