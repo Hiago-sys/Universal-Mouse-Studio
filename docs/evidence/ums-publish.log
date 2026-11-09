@@ -1,0 +1,8 @@
+  Determining projects to restore...
+  Restored /workspace/work/UniversalMouseStudio/src/UniversalMouse.Core/UniversalMouse.Core.csproj (in 508 ms).
+  Restored /workspace/work/UniversalMouseStudio/src/UniversalMouse.Windows/UniversalMouse.Windows.csproj (in 518 ms).
+  Restored /workspace/work/UniversalMouseStudio/src/UniversalMouse.App/UniversalMouse.App.csproj (in 10 ms).
+  UniversalMouse.Core -> /workspace/work/UniversalMouseStudio/src/UniversalMouse.Core/bin/Release/net10.0/UniversalMouse.Core.dll
+  UniversalMouse.Windows -> /workspace/work/UniversalMouseStudio/src/UniversalMouse.Windows/bin/Release/net10.0-windows/UniversalMouse.Windows.dll
+  UniversalMouse.App -> /workspace/work/UniversalMouseStudio/src/UniversalMouse.App/bin/Release/net10.0-windows/win-x64/UniversalMouseStudio.dll
+  UniversalMouse.App -> /workspace/work/UniversalMouseStudio/artifacts/portable-win-x64/

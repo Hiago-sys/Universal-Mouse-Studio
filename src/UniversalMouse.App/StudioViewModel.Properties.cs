@@ -1,0 +1,54 @@
+namespace UniversalMouse.App;
+public sealed partial class StudioViewModel
+{
+ private int _pageIndex=0;
+ public int PageIndex {get=>_pageIndex;set {if(Set(ref _pageIndex,value)){}}}
+ private int _pointerSpeed=10;
+ public int PointerSpeed {get=>_pointerSpeed;set {if(Set(ref _pointerSpeed,value)){Changed();}}}
+ private bool _enhancePointerPrecision=true;
+ public bool EnhancePointerPrecision {get=>_enhancePointerPrecision;set {if(Set(ref _enhancePointerPrecision,value)){Changed();}}}
+ private bool _swapButtons=false;
+ public bool SwapButtons {get=>_swapButtons;set {if(Set(ref _swapButtons,value)){Changed();}}}
+ private int _doubleClickMilliseconds=500;
+ public int DoubleClickMilliseconds {get=>_doubleClickMilliseconds;set {if(Set(ref _doubleClickMilliseconds,value)){Changed();}}}
+ private int _wheelLines=3;
+ public int WheelLines {get=>_wheelLines;set {if(Set(ref _wheelLines,value)){Changed();}}}
+ private bool _pageScroll=false;
+ public bool PageScroll {get=>_pageScroll;set {if(Set(ref _pageScroll,value)){Changed();}}}
+ private bool _inactiveScroll=true;
+ public bool InactiveScroll {get=>_inactiveScroll;set {if(Set(ref _inactiveScroll,value)){Changed();}}}
+ private bool _clickLock=false;
+ public bool ClickLock {get=>_clickLock;set {if(Set(ref _clickLock,value)){Changed();}}}
+ private double _strength=65;
+ public double Strength {get=>_strength;set {if(Set(ref _strength,value)){Changed();}}}
+ private double _tolerance=8;
+ public double Tolerance {get=>_tolerance;set {if(Set(ref _tolerance,value)){Changed();}}}
+ private bool _horizontal=true;
+ public bool Horizontal {get=>_horizontal;set {if(Set(ref _horizontal,value)){Changed();}}}
+ private bool _vertical=true;
+ public bool Vertical {get=>_vertical;set {if(Set(ref _vertical,value)){Changed();}}}
+ private double _horizontalStrength=100;
+ public double HorizontalStrength {get=>_horizontalStrength;set {if(Set(ref _horizontalStrength,value)){Changed();}}}
+ private double _verticalStrength=100;
+ public double VerticalStrength {get=>_verticalStrength;set {if(Set(ref _verticalStrength,value)){Changed();}}}
+ private bool _diagonal=false;
+ public bool Diagonal {get=>_diagonal;set {if(Set(ref _diagonal,value)){Changed();}}}
+ private double _diagonalDegrees=45;
+ public double DiagonalDegrees {get=>_diagonalDegrees;set {if(Set(ref _diagonalDegrees,value)){Changed();}}}
+ private double _smoothing=0;
+ public double Smoothing {get=>_smoothing;set {if(Set(ref _smoothing,value)){Changed();}}}
+ private double _detectionDistance=3;
+ public double DetectionDistance {get=>_detectionDistance;set {if(Set(ref _detectionDistance,value)){Changed();}}}
+ private double _hysteresis=3;
+ public double Hysteresis {get=>_hysteresis;set {if(Set(ref _hysteresis,value)){Changed();}}}
+ private bool _labCorrection=true;
+ public bool LabCorrection {get=>_labCorrection;set {if(Set(ref _labCorrection,value)){Changed();}}}
+ private bool _autoProfiles=false;
+ public bool AutoProfiles {get=>_autoProfiles;set {if(Set(ref _autoProfiles,value)){}}}
+ private bool _lightTheme=false;
+ public bool LightTheme {get=>_lightTheme;set {if(Set(ref _lightTheme,value)){ChangeTheme();}}}
+ private string _x1Action="original";
+ public string X1Action {get=>_x1Action;set {if(Set(ref _x1Action,value)){Changed();}}}
+ private string _x2Action="original";
+ public string X2Action {get=>_x2Action;set {if(Set(ref _x2Action,value)){Changed();}}}
+}
